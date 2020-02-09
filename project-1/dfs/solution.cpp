@@ -100,7 +100,7 @@ int main(int argc, const char* argv[]) {
 
     std::string fileName = argv[1];
 	*/
-	std::string fileName = "input2.txt";
+	std::string fileName = "input4.txt";
 	
 	
     std::ifstream in(fileName);
@@ -171,6 +171,7 @@ int dfsSearch(int dimension, int camNum, std::vector<std::vector<int> >& animPos
     int currentCol = 0;
     int maxCaught = 0;
     int currCaught = 0;
+    int constCam = camNum;
     // Set up a clean board
     // We just store the column number of the trap placed
     std::vector<int> occupied;
@@ -193,13 +194,18 @@ int dfsSearch(int dimension, int camNum, std::vector<std::vector<int> >& animPos
 
     while (!(currentRow == 0 && currentCol == dimension+1)) {
         std::cout << "row is : " << currentRow << " col is : "<< currentCol << " number of drones is " << camNum << " max value is " << maxCaught << std::endl;
+        if (camNum == constCam) {
+            std::cout << "hua dian!!!" << std::endl;
+        }
         found = false;
         needBack = false;
 		
 		// Alpha-beta
 		// If it's not possible to reach better, backtrack
-		if (currCaught + estimates[currentRow][camNum-1] <= maxCaught){
-			needBack = true;
+		
+        if (0){
+        //if (currCaught + estimates[currentRow][camNum-1] <= maxCaught){
+		//	needBack = true;
 		}else{
 				// Find a possible position in the row
 			for (int i = currentCol; i < dimension; ++i) {

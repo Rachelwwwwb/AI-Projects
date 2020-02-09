@@ -14,8 +14,7 @@ void astarSearch(int n, int d, int p, bool** board){
 }
 
 int dfSearch(const int n, int d, const int p, int** board, vector<int> row, vector<bool>& col, vector<bool>& dia, vector<bool>& revdia){
-    // change from recursion to iterative
-
+    int pac = d;
     bool backtrace = false;
     int max = 0;
     int currentRow = 0;
@@ -23,12 +22,12 @@ int dfSearch(const int n, int d, const int p, int** board, vector<int> row, vect
     int currentPack = 0;
     bool found = false;
     if (!d) return 0;
-    bool cont = true;
-    // loop over each column
-    while (cont) {
+
+    while (true) {
         cout << "row is : " << currentRow << " col is : "<< currentCol << " number of drones is " << d << " max value is " << max << endl;
         found = false;
         backtrace = false;
+        // loop over each column
         for (currentCol; currentCol < n; currentCol++){
             if ( !col[currentCol] && !dia[currentCol + currentRow] && !revdia[currentRow - currentCol + n - 1]){
                 // cout << "placed in: "<< currentCol << endl;
@@ -93,19 +92,24 @@ int dfSearch(const int n, int d, const int p, int** board, vector<int> row, vect
                 currentRow --;
                 // not necessary; don't have to fill the first line
                 if (currentRow < 0) return max;
+                // or we can test whether the currentCol is equal to d+1
                 d++;
                 while (row[currentRow] == -1 || row[currentRow] == n-1){
                     if (row[currentRow] == n-1) {
-                    
+                        d++;
+                        if (d > pac){
+                            d = pac;
+                            cout << "switch!" << endl;
+                            break;
+                        }
                         row[currentRow] = -1;
                         col[n-1] = 0;
                         dia[n-1 + currentRow] = 0;
                         revdia[currentRow] = 0;
                         currentPack -= board[currentRow][n-1];
-                        d++;
                     }
                     currentRow --;
-                    // not necessary; don't have to fill the first line
+                    // not sure at all
                     if (currentRow < 0 ) return max;
                 }  
                 int tempCol = row[currentRow];
@@ -132,7 +136,7 @@ int main(){
     int n, d, p;
     string algorithm;
     ifstream myfile;
-    myfile.open("input1.txt");
+    myfile.open("input4.txt");
     myfile >> n >> d >> p;
     myfile >> algorithm;
     int** board = new int*[n];
