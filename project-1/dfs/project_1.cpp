@@ -21,13 +21,11 @@ int dfSearch(const int n, int d, const int p, int** board, vector<bool>& col, ve
         if (!row[i]){
             for (int j = 0; j < n; j++){
                 if (!row[j] && !dia[i+j] && !revdia[i-j+n-1]){
-                    //cout << "checking... i: " << i << " j: "<< j << " for the drone: "<< d << endl;
                     row[j] = 1;
                     col[j] = 1;
                     dia[i+j] = 1;
                     revdia[i-j+n-1] = 1;
                     int val = board[i][j] + dfSearch(n, d-1, p, board, col, row, dia, revdia);
-                    //cout << "val is: "<< val << " and max is: "<< max << endl;
                     if (val > max) max = val;
                     // if already pick up all the packets, return strictly
                     row[j] = 0;
