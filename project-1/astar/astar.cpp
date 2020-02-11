@@ -3,6 +3,7 @@
 #include <vector>
 #include <chrono>
 #include <queue>
+#include <string>
 
 using namespace std;
 using namespace std::chrono;
@@ -12,7 +13,6 @@ class state{
         int fscore;
         int gscore;
         int hscore;
-        int packNum;
         int currentRow;
         int currentCol;
         vector<int> row;
@@ -21,7 +21,6 @@ class state{
         state(int drones, int row, int col, int _fscore, int _gscore, int _hscore, vector<int> _row):d(drones),currentRow(row), currentCol(col), fscore(_fscore), gscore(_gscore), hscore(_hscore), row(_row){}
         int getRow () { return currentRow;}
         int getD() {return d;};
-        int getPack() {return packNum;}
         int getGscore(){return gscore;}
         vector<int> getRowV() {return row;};
         bool operator< (const state &other) const {
@@ -78,18 +77,22 @@ bool isLegal(int row, int col, vector<int> rowV, int n){
 // d = 2: is 2 drones left after placing or before
 int astarSearch(int n, int d, int p, vector<vector<int> >& board){
     priority_queue<state> q;
+    int maxd = d;
     vector<int> _row(n,-1);
     // a node state
     state head(d, 0, -1, 0 , 0, 0, _row);
     q.push(head);
     int max = 0;
+    //vector<vector<int> > hscores = {{0,1,2},{0,1},{0}};
+
     vector<vector<int> > hscores = createHscores(board);
-    for (int i = 0; i < n; i++){
-        for (int j = 0; j < n; j++){
-            cout << hscores[i][j]<<" ";
+    for (int i = 0; i < hscores.size(); i++){
+        for (int j = 0; j < hscores[i].size(); j++){
+            //cout << hscores[i][j]<<" ";
         }
-        cout << endl;
+        //cout << endl;
     }
+    //cout << endl;
     while (!q.empty()){
         state head = q.top();
         cout << "at row " << head.getRow() << " with "<< head.getD() << " drones" << endl;
@@ -98,17 +101,17 @@ int astarSearch(int n, int d, int p, vector<vector<int> >& board){
         // if the number of drones remaining is 0
         // return the number
         vector<int> rowV = head.getRowV();
-        //for (int i = 0; i < n; i++) cout << rowV[i] << " ";
-        //cout << endl;
+
         int row = head.getRow();
         if (head.getD() == 0) {
-            if (head.getPack() > max) max = head.getPack();
-            if (head.getPack() == p) return p;
-            continue;
+            
+            return head.getGscore();
+            
+           //return head.getPack();
         }
         // if decide to place and still smaller
         // then continue
-        if (head.getGscore() + hscores[row][head.getD()-1] < max) continue;
+        //if (head.getGscore() + hscores[row][head.getD()-1] < max) continue;
         int newgscore = head.getGscore();
         int newHscore = 0;
 
@@ -125,7 +128,7 @@ int astarSearch(int n, int d, int p, vector<vector<int> >& board){
                 newgscore += board[row][i];
                 if (newgscore > max) max = newgscore;
                 rowV[row] = i;
-                cout << "row: "<< row << " col: "<< i <<" with score " << newHscore + newgscore<< endl;
+                // << "row: "<< row << " col: "<< i <<" with score " << newHscore + newgscore<< endl;
                 state newstate(head.getD()-1, row+1, i, newHscore + newgscore, newgscore, newHscore, rowV);
                 q.push(newstate);
                 found = true;
@@ -135,12 +138,14 @@ int astarSearch(int n, int d, int p, vector<vector<int> >& board){
         // if not found
         // either no fit place
         // or we don't place in this line
-        if (row+1 < n && n - row - 1 >= head.getD()){
+        if (row+1 < n && n - row >= head.getD()){
             rowV[row] = -1;
-            newHscore = hscores[row+1][d];
+            newHscore = hscores[row][d];
             newgscore = head.getGscore();
-            state newstate(head.getD(), row+1, -1, newgscore + newHscore, newgscore, newHscore, rowV);
-            q.push(newstate);
+            if (newHscore + newgscore > max){
+                state newstate(head.getD(), row+1, -1, newgscore + newHscore, newgscore, newHscore, rowV);
+                q.push(newstate);
+            }
         }
     }
     return max;
@@ -151,50 +156,53 @@ int main(){
     // n is weight and height of the area
     // d is the number of drones
     // p is the number of packets
-    auto start = high_resolution_clock::now();
-    int n, d, p;
-    string algorithm;
-    ifstream myfile;
-    myfile.open("input2.txt");
-    myfile >> n >> d >> p;
-    myfile >> algorithm;
-    vector<vector<int> > board;
-    
-    for (int i = 0; i < n; i++){
-        vector<int> temp(n,0);
-        board.push_back(temp);
-    }
-    for (int i = 0; i < p;i++){
-        int a, b;
-        char c;
-        myfile >> a >> c >> b;
-        board[a][b] += 1;
-    }
-    vector <int> row;
-    vector <bool> col;
-    vector <bool> dia;
-    vector <bool> revdia;
-    for (int i = 0; i < n; i++){
-        row.push_back(-1);
-        col.push_back(0);
-    }
-    for (int i = 0; i < 2*n - 1; i++){
-        dia.push_back(0);
-        revdia.push_back(0);
-    }
-    if (algorithm == "dfs"){
-        cout << "---------------"<<endl;
-        //cout << dfSearch(n, d, p, board, row, col, dia, revdia)<<endl;
-        auto stop = high_resolution_clock::now();
-        auto duration = duration_cast<microseconds>(stop - start);
-        cout << "time used: " << duration.count()/1000000.0 << "s" << endl;
-    }
-    else if (algorithm == "astar"){
-        cout << "---------------"<<endl;
-        cout << astarSearch(n, d, p, board) << endl;
-        auto stop = high_resolution_clock::now();
-        auto duration = duration_cast<microseconds>(stop - start);
-        cout << "time used: " << duration.count()/1000000.0 << "s" << endl;
-    }
+    for (int i = 1; i < 2; i++){
+        auto start = high_resolution_clock::now();
+        int n, d, p;
+        string algorithm;
+        ifstream myfile;
+        string filename = "input" + to_string(i) + ".txt";
+        myfile.open("input1.txt");
+        myfile >> n >> d >> p;
+        myfile >> algorithm;
+        vector<vector<int> > board;
+        
+        for (int i = 0; i < n; i++){
+            vector<int> temp(n,0);
+            board.push_back(temp);
+        }
+        for (int i = 0; i < p;i++){
+            int a, b;
+            char c;
+            myfile >> a >> c >> b;
+            board[a][b] += 1;
+        }
+        vector <int> row;
+        vector <bool> col;
+        vector <bool> dia;
+        vector <bool> revdia;
+        for (int i = 0; i < n; i++){
+            row.push_back(-1);
+            col.push_back(0);
+        }
+        for (int i = 0; i < 2*n - 1; i++){
+            dia.push_back(0);
+            revdia.push_back(0);
+        }
+        if (algorithm == "dfs"){
+            cout << "---------------"<<endl;
+            //cout << dfSearch(n, d, p, board, row, col, dia, revdia)<<endl;
+            auto stop = high_resolution_clock::now();
+            auto duration = duration_cast<microseconds>(stop - start);
+            cout << "time used: " << duration.count()/1000000.0 << "s" << endl;
+        }
+        else if (algorithm == "astar"){
+            //cout << "---------------"<<endl;
+            cout << astarSearch(n, d, p, board) << endl;
+            auto stop = high_resolution_clock::now();
+            auto duration = duration_cast<microseconds>(stop - start);
+            cout << "time used: " << duration.count()/1000000.0 << "s" << endl;
+        }
+    }  
     
 }
