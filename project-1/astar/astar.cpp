@@ -24,6 +24,7 @@ class state{
         int getGscore(){return gscore;}
         vector<int> getRowV() {return row;};
         bool operator< (const state &other) const {
+            if (fscore == other.fscore) return currentRow < other.currentRow;
 		    return fscore < other.fscore;
 	    }
 
@@ -32,31 +33,47 @@ class state{
 bool greaterThan (int x, int y){
     return x > y;
 }
-std::vector<std::vector<int>> createHscores(std::vector<std::vector<int> >& animPos) {
-	std::vector<std::vector<int>> result;
-    std::vector<int> rowScores;
-    for (auto& iter: animPos) {
-        rowScores.emplace_back(*std::max_element(iter.begin(), iter.end()));
-    }
-    int num = 0;
-    std::vector<int> tempScores;
-	std::vector<int> hScores;
-	
-    for (int i = 0; i < rowScores.size(); ++i) {
-        tempScores.clear();
-		copy(rowScores.begin() + i, rowScores.end(), back_inserter(tempScores));
-        sort(tempScores.begin(), tempScores.end(), greaterThan);
 
-		int accumulate = 0;
-		hScores.clear();
-		for (auto& iter: tempScores){
-			accumulate += iter;
-			hScores.emplace_back(accumulate);
-		}
-
-		result.emplace_back(hScores);
+std::vector<std::vector<int>> createHscores(std::vector<std::vector<int> >& board, int d) {
+    std::vector<std::vector<int>> result;
+    std::vector<int> rowScores(board.size(),0);
+    
+    for (int i = 0;i < board.size();i++){
+        int max = 0;
+        for (int j = 0; j < board[i].size();j++){
+            if (board[i][j] > max) max = board[i][j]; 
+        }
+        rowScores[i] = max;
     }
 
+
+    for (int i = 0; i < board.size();i++){
+        vector <int> eachRow;
+        vector<int> temp(rowScores.begin()+i+1, rowScores.end());
+        sort(temp.begin(),temp.end(),greaterThan);
+
+        if (i < board.size() - d){
+            for (int j = 0; j <= d; j++){
+                // sum up the first n-i-1 items
+                int accu = 0;
+                for (int z = 0; z < j;z++){
+                    accu += temp[z];
+                }
+                eachRow.push_back(accu);
+            }
+        }
+        else{
+            for (int j = 0; j <= d - (i - (board.size() - d - 1)); j++){
+                // sum up the first n-i-1 items
+                int accu = 0;
+                for (int z = 0; z < j;z++){
+                    accu += temp[z];
+                }
+                eachRow.push_back(accu);
+            }
+        }
+        result.push_back(eachRow);
+    }
     return result;
 }
 
@@ -72,10 +89,11 @@ bool isLegal(int row, int col, vector<int> rowV, int n){
     return true;
 }
 
-// clarify the meaning of currentRow
-// currentRow = 3: is row 3 placed or to be placed
-// d = 2: is 2 drones left after placing or before
+// clarification
+// currentRow = 3: regardless of how to place row 3
+// d = 2: there will be 2 drones starting next line
 int astarSearch(int n, int d, int p, vector<vector<int> >& board){
+    cout << endl;
     priority_queue<state> q;
     int maxd = d;
     vector<int> _row(n,-1);
@@ -83,18 +101,18 @@ int astarSearch(int n, int d, int p, vector<vector<int> >& board){
     state head(d, 0, -1, 0 , 0, 0, _row);
     q.push(head);
     int max = 0;
-    //vector<vector<int> > hscores = {{0,1,2},{0,1},{0}};
 
-    vector<vector<int> > hscores = createHscores(board);
+    vector<vector<int> > hscores = createHscores(board,d);
     for (int i = 0; i < hscores.size(); i++){
         for (int j = 0; j < hscores[i].size(); j++){
-            //cout << hscores[i][j]<<" ";
+            cout << hscores[i][j]<<" ";
         }
-        //cout << endl;
+        cout << endl;
     }
-    //cout << endl;
+    cout << endl;
     while (!q.empty()){
         state head = q.top();
+
         cout << "at row " << head.getRow() << " with "<< head.getD() << " drones" << endl;
         q.pop();
         bool found = false;
@@ -107,11 +125,9 @@ int astarSearch(int n, int d, int p, vector<vector<int> >& board){
             
             return head.getGscore();
             
-           //return head.getPack();
         }
         // if decide to place and still smaller
         // then continue
-        //if (head.getGscore() + hscores[row][head.getD()-1] < max) continue;
         int newgscore = head.getGscore();
         int newHscore = 0;
 
@@ -122,26 +138,30 @@ int astarSearch(int n, int d, int p, vector<vector<int> >& board){
             newgscore = head.getGscore();
             if (isLegal(row, i, rowV, n)){
                 // decide to place
-                if (row+1 < n) newHscore = hscores[row+1][d-1];
+                if (row+1 < n && head.getD()-1 > 0) {
+                    newHscore = hscores[row][head.getD()-1];
+                }
                 else newHscore = 0;
 
                 newgscore += board[row][i];
                 if (newgscore > max) max = newgscore;
                 rowV[row] = i;
-                // << "row: "<< row << " col: "<< i <<" with score " << newHscore + newgscore<< endl;
-                state newstate(head.getD()-1, row+1, i, newHscore + newgscore, newgscore, newHscore, rowV);
-                q.push(newstate);
-                found = true;
+                if (n - row >= head.getD()){ 
+                    cout << "row: "<< row << " col: "<< i <<" with hscore " << newHscore << " and gscore " <<  newgscore<< endl;
+                    state newstate(head.getD()-1, row+1, i, newHscore + newgscore, newgscore, newHscore, rowV);
+                    q.push(newstate);
+                }
             }
         }
 
         // if not found
         // either no fit place
         // or we don't place in this line
-        if (row+1 < n && n - row >= head.getD()){
+        if (row+1 < n && n - row - 1 >= head.getD()){
             rowV[row] = -1;
-            newHscore = hscores[row][d];
+            newHscore = hscores[row][head.getD()];
             newgscore = head.getGscore();
+            cout << "row: "<< row << " col: -1 "<<" with hscore " << newHscore << " and gscore " <<  newgscore<< endl;
             if (newHscore + newgscore > max){
                 state newstate(head.getD(), row+1, -1, newgscore + newHscore, newgscore, newHscore, rowV);
                 q.push(newstate);
@@ -162,7 +182,7 @@ int main(){
         string algorithm;
         ifstream myfile;
         string filename = "input" + to_string(i) + ".txt";
-        myfile.open("input1.txt");
+        myfile.open("input9.txt");
         myfile >> n >> d >> p;
         myfile >> algorithm;
         vector<vector<int> > board;
@@ -198,7 +218,7 @@ int main(){
         }
         else if (algorithm == "astar"){
             //cout << "---------------"<<endl;
-            cout << astarSearch(n, d, p, board) << endl;
+            cout << filename << ": " << astarSearch(n, d, p, board) << endl;
             auto stop = high_resolution_clock::now();
             auto duration = duration_cast<microseconds>(stop - start);
             cout << "time used: " << duration.count()/1000000.0 << "s" << endl;
