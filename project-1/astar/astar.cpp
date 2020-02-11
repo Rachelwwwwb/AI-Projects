@@ -98,12 +98,17 @@ int astarSearch(int n, int d, int p, vector<vector<int> >& board){
         // if the number of drones remaining is 0
         // return the number
         vector<int> rowV = head.getRowV();
+        //for (int i = 0; i < n; i++) cout << rowV[i] << " ";
+        //cout << endl;
         int row = head.getRow();
         if (head.getD() == 0) {
             if (head.getPack() > max) max = head.getPack();
+            if (head.getPack() == p) return p;
             continue;
         }
-        if (head.getGscore() + hscores[row][head.getD()] < max) continue;
+        // if decide to place and still smaller
+        // then continue
+        if (head.getGscore() + hscores[row][head.getD()-1] < max) continue;
         int newgscore = head.getGscore();
         int newHscore = 0;
 
@@ -113,6 +118,7 @@ int astarSearch(int n, int d, int p, vector<vector<int> >& board){
             newHscore = 0;
             newgscore = head.getGscore();
             if (isLegal(row, i, rowV, n)){
+                // decide to place
                 if (row+1 < n) newHscore = hscores[row+1][d-1];
                 else newHscore = 0;
 
