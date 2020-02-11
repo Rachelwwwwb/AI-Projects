@@ -3,6 +3,7 @@
 #include <vector>
 #include <chrono>
 #include <queue>
+
 using namespace std;
 using namespace std::chrono;
 
@@ -100,6 +101,7 @@ int astarSearch(int n, int d, int p, vector<vector<int> >& board){
         int row = head.getRow();
         if (head.getD() == 0) {
             if (head.getPack() > max) max = head.getPack();
+            continue;
         }
         if (head.getGscore() + hscores[row][head.getD()] < max) continue;
         int newgscore = head.getGscore();
@@ -111,7 +113,9 @@ int astarSearch(int n, int d, int p, vector<vector<int> >& board){
             newHscore = 0;
             newgscore = head.getGscore();
             if (isLegal(row, i, rowV, n)){
-                newHscore = hscores[row+1][d-1];
+                if (row+1 < n) newHscore = hscores[row+1][d-1];
+                else newHscore = 0;
+
                 newgscore += board[row][i];
                 if (newgscore > max) max = newgscore;
                 rowV[row] = i;
