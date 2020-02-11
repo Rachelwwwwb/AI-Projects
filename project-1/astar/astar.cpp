@@ -101,19 +101,19 @@ int astarSearch(int n, int d, int p, vector<vector<int> >& board){
     state head(d, 0, -1, 0 , 0, 0, _row);
     q.push(head);
     int max = 0;
+    int lastMax = 0;
 
     vector<vector<int> > hscores = createHscores(board,d);
     for (int i = 0; i < hscores.size(); i++){
         for (int j = 0; j < hscores[i].size(); j++){
-            cout << hscores[i][j]<<" ";
+            //cout << hscores[i][j]<<" ";
         }
-        cout << endl;
+        //cout << endl;
     }
-    cout << endl;
+    //cout << endl;
     while (!q.empty()){
         state head = q.top();
-
-        cout << "at row " << head.getRow() << " with "<< head.getD() << " drones" << endl;
+        //cout << "at row " << head.getRow() << " with "<< head.getD() << " drones" << endl;
         q.pop();
         bool found = false;
         // if the number of drones remaining is 0
@@ -144,12 +144,16 @@ int astarSearch(int n, int d, int p, vector<vector<int> >& board){
                 else newHscore = 0;
 
                 newgscore += board[row][i];
-                if (newgscore > max) max = newgscore;
+                if (newgscore > max) {
+                    max = newgscore;
+                    max = lastMax;
+                }
                 rowV[row] = i;
                 if (n - row >= head.getD()){ 
-                    cout << "row: "<< row << " col: "<< i <<" with hscore " << newHscore << " and gscore " <<  newgscore<< endl;
+                    //cout << "row: "<< row << " col: "<< i <<" with hscore " << newHscore << " and gscore " <<  newgscore<< endl;
                     state newstate(head.getD()-1, row+1, i, newHscore + newgscore, newgscore, newHscore, rowV);
                     q.push(newstate);
+                    found = true;
                 }
             }
         }
@@ -161,11 +165,16 @@ int astarSearch(int n, int d, int p, vector<vector<int> >& board){
             rowV[row] = -1;
             newHscore = hscores[row][head.getD()];
             newgscore = head.getGscore();
-            cout << "row: "<< row << " col: -1 "<<" with hscore " << newHscore << " and gscore " <<  newgscore<< endl;
+            //cout << "row: "<< row << " col: -1 "<<" with hscore " << newHscore << " and gscore " <<  newgscore<< endl;
             if (newHscore + newgscore > max){
                 state newstate(head.getD(), row+1, -1, newgscore + newHscore, newgscore, newHscore, rowV);
                 q.push(newstate);
+                found = true;
             }
+        }
+        if (!found) {
+            max = lastMax;
+            lastMax = 0;
         }
     }
     return max;
@@ -182,7 +191,7 @@ int main(){
         string algorithm;
         ifstream myfile;
         string filename = "input" + to_string(i) + ".txt";
-        myfile.open("input9.txt");
+        myfile.open("input10.txt");
         myfile >> n >> d >> p;
         myfile >> algorithm;
         vector<vector<int> > board;
