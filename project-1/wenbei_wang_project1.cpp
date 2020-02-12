@@ -3,6 +3,7 @@
 #include <vector>
 #include <queue>
 #include <string>
+#include <algorithm>
 
 using namespace std;
 
@@ -31,7 +32,7 @@ bool greaterThan (int x, int y){
 }
 
 // for dsf the h function
-int** getScore(vector<vector<int>> board, const int n){
+int** getScore(vector<vector<int> > board, const int n){
     int** score = new int*[n];
     // initialize the empty board
     for (int i = 0; i < n; i++){
@@ -78,8 +79,8 @@ int** getScore(vector<vector<int>> board, const int n){
 }
 
 // the hscore for astar
-std::vector<std::vector<int>> hscoreAstar(std::vector<std::vector<int> >& board, int d) {
-    std::vector<std::vector<int>> result;
+std::vector<std::vector<int> > hscoreAstar(std::vector<std::vector<int> >& board, int d) {
+    std::vector<std::vector<int> > result;
     std::vector<int> rowScores(board.size(),0);
     
     for (int i = 0;i < board.size();i++){
@@ -315,7 +316,7 @@ int astarSearch(int n, int d, int p, vector<vector<int> >& board){
 void writeOutput(int ans){
     ofstream myfile;
     myfile.open("output.txt");
-    myfile << to_string(ans) + "\n";
+    myfile << ans << "\n";
     myfile.close();
 }
 

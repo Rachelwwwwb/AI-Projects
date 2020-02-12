@@ -203,13 +203,13 @@ int dfSearch(const int n, int d, const int p, vector<vector<int> > board, vector
 }
 
 int main(){
-        for (int i = 0; i < 15; i++){
+        for (int i = 0; i < 1; i++){
         auto start = high_resolution_clock::now();
         int n, d, p;
         string algorithm;
         ifstream myfile;
         string filename = "input" + to_string(i) + ".txt";
-        myfile.open(filename);
+        myfile.open("input14.txt");
         myfile >> n >> d >> p;
         myfile >> algorithm;
         vector<vector<int> > board;
