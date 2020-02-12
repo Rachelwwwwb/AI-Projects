@@ -191,21 +191,28 @@ int dfsSearch(int dimension, int camNum, std::vector<std::vector<int> >& animPos
 	
 	// The essence of estimate for alpha-beta is the same as astar
 	std::vector<std::vector<int>> estimates = createHscores(animPos);
-
+    for (int i = 0; i < dimension; i++){
+        for (int j = 0; j < dimension; j++){
+            std::cout<<estimates[i][j]<<" ";
+        }
+        std::cout << std::endl;
+    }
     while (!(currentRow == 0 && currentCol == dimension+1)) {
+        /*
         std::cout << "row is : " << currentRow << " col is : "<< currentCol << " number of drones is " << camNum << " max value is " << maxCaught << std::endl;
         if (camNum == constCam) {
             std::cout << "hua dian!!!" << std::endl;
         }
+        */
         found = false;
         needBack = false;
 		
 		// Alpha-beta
 		// If it's not possible to reach better, backtrack
 		
-        if (0){
-        //if (currCaught + estimates[currentRow][camNum-1] <= maxCaught){
-		//	needBack = true;
+        //if (0){
+        if (currCaught + estimates[currentRow][camNum-1] <= maxCaught){
+			needBack = true;
 		}else{
 				// Find a possible position in the row
 			for (int i = currentCol; i < dimension; ++i) {
@@ -425,14 +432,25 @@ std::vector<std::vector<int>> createHscores(std::vector<std::vector<int> >& anim
     for (int i = 0; i < rowScores.size(); ++i) {
         tempScores.clear();
 		copy(rowScores.begin() + i, rowScores.end(), back_inserter(tempScores));
-		sort(tempScores.begin(), tempScores.end(), greaterThan);
+        /*
+        for (int i = 0; i < tempScores.size();i++) std::cout << tempScores[i] << " ";
+        std::cout << std::endl << std::endl;
+		*/
+        sort(tempScores.begin(), tempScores.end(), greaterThan);
+        /*
+        for (int i = 0; i < tempScores.size();i++) std::cout << tempScores[i] << " ";
+        std::cout << std::endl << std::endl;
+        */
 		int accumulate = 0;
 		hScores.clear();
 		for (auto& iter: tempScores){
 			accumulate += iter;
 			hScores.emplace_back(accumulate);
 		}
+        //for (int i = 0; i < hScores.size();i++) std::cout << hScores[i] << " ";
+        //std::cout << std::endl << std::endl;
 		result.emplace_back(hScores);
+        //std::cout << "-----------"<<std::endl;
     }
 
     return result;
