@@ -140,7 +140,7 @@ double maxValue (state*s){
         if (maxState->tmpTeamA.sumUp() - maxState->tmpTeamB.sumUp() < s->advantage) maxState = s;
         return s->advantage;
     }
-    double retval = -(numeric_limits<double>::max)();
+    double retval = (numeric_limits<double>::min)();
     for (state* child : s->children){
         double tmp = minValue(child);
         retval = (retval < tmp) ? tmp : retval;
@@ -168,9 +168,11 @@ double minValue (state*s){
 int minmax(team teamA, team teamB, vector<contestant*> people){
     state* root = buildGraph(teamA, teamB, people);
     state* tmp = NULL;
-    double adv = -(numeric_limits<double>::max)();
+    double adv = (numeric_limits<double>::min)();
     for (state* s : root->children) {
         double tmpVal = minValue(s);
+        if (!tmp) tmp = s;
+        cout << tmpVal;
         if (tmpVal > adv){
             adv = tmpVal;
             tmp = s;
@@ -186,7 +188,7 @@ int minmax(team teamA, team teamB, vector<contestant*> people){
     cout << "max state" << endl;
     maxState->tmpTeamA.print();
     maxState->tmpTeamA.sortTeam();
-    // cout << maxState->tmpTeamA.sumUp();
+    cout << maxState->tmpTeamA.sumUp();
     for (int i = 0; i < root->tmpTeamA.count();i++){
         if (root->tmpTeamA.members[i] != tmp->tmpTeamA.members[i]) return tmp->tmpTeamA.members[i]->id;
     }
@@ -222,7 +224,7 @@ int main(){
     sort(people.begin(), people.end(), smallerThan);
 
     if (algorithm == "minimax"){
-        cout << minmax(teamA, teamB, people) << endl;
+        cout << minmax(teamA, teamB, people);
     }
     else if (algorithm == "ab"){
     }
