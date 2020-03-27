@@ -60,7 +60,7 @@ public:
 class state{
     public:
         state(bool _isRoot, bool _isMax, vector<contestant*> _unvisited, team _teamA, team _teamB):isRoot(_isRoot), 
-        isMax(_isMax), unvisited(_unvisited), tmpTeamA(_teamA), tmpTeamB(_teamB),advantage(0.0) {}
+        isMax(_isMax), unvisited(_unvisited), tmpTeamA(_teamA), tmpTeamB(_teamB) {}
 
         bool isRoot;
         bool isMax;
@@ -68,7 +68,7 @@ class state{
         vector<contestant*> unvisited;
         team tmpTeamA;
         team tmpTeamB;
-        double advantage; 
+        double advantage = 0.0; 
 
 };
 state* smallestChild(state*s){
@@ -95,6 +95,8 @@ state* largestChild(state*s){
 }
 double maxValue (state*s);
 double minValue (state*s);
+double maxValue(state*s, double alpha, double beta);
+double minValue(state*s, double alpha, double beta);
 
 bool terminateTest(state*s){
     return ( (s->tmpTeamA.count() == 5) && (s->tmpTeamB.count() == 5) );
@@ -182,15 +184,83 @@ int minmax(team teamA, team teamB, vector<contestant*> people){
     root->tmpTeamA.print();
     cout << "the tmp team is " << endl;
     tmp->tmpTeamA.print();
-
+    cout << tmp->advantage<< endl;
     cout << "max state" << endl;
     maxState->tmpTeamA.print();
+    cout << maxState->advantage << endl;
     maxState->tmpTeamA.sortTeam();
     // cout << maxState->tmpTeamA.sumUp();
     for (int i = 0; i < root->tmpTeamA.count();i++){
         if (root->tmpTeamA.members[i] != tmp->tmpTeamA.members[i]) return tmp->tmpTeamA.members[i]->id;
     }
     return tmp->tmpTeamA.members[tmp->tmpTeamA.count()-1]->id;
+}
+double maxValue(state*s, double alpha, double beta){
+    if (terminateTest(s)) {
+        if (!maxState) maxState = s;
+        s->advantage = s->tmpTeamA.sumUp() - s->tmpTeamB.sumUp();
+        if (maxState->tmpTeamA.sumUp() - maxState->tmpTeamB.sumUp() < s->advantage) maxState = s;
+        //return s->advantage;
+        return s->tmpTeamA.sumUp() - s->tmpTeamB.sumUp();
+    }
+    double retval = -(numeric_limits<double>::max)();
+    for (state* child : s->children){
+        retval = max(retval, minValue(child,alpha,beta));
+        if (retval >= beta) {
+            s->advantage = retval;
+            return retval;
+        }
+        alpha = max(alpha, retval);
+    }
+    s->advantage = retval;
+    return retval;
+}
+double minValue(state*s, double alpha, double beta){
+    if (terminateTest(s)) {
+        if (!maxState) maxState = s;
+        s->advantage = s->tmpTeamA.sumUp() - s->tmpTeamB.sumUp();
+        if (maxState->tmpTeamA.sumUp() - maxState->tmpTeamB.sumUp() < s->advantage) maxState = s;
+        return s->advantage;
+        //return s->tmpTeamA.sumUp() - s->tmpTeamB.sumUp();
+    }
+    double retval = (numeric_limits<double>::max)();
+    for (state* child : s->children){
+        retval = min(retval, maxValue(child, alpha, beta));
+        if (retval <= alpha) {
+            s->advantage = retval;
+            return retval;
+        }
+        beta = min(beta, retval);
+    }
+    s->advantage = retval;
+    return retval;
+}
+int ab(team teamA, team teamB, vector<contestant*> people){
+    state* root = buildGraph(teamA, teamB, people);
+    double ad = maxValue(root, -(numeric_limits<double>::max)(), (numeric_limits<double>::max)());
+    state* next;
+    for (state* s : root->children) {
+        if (s->advantage == ad){
+            next = s;
+            break;
+        }
+    }
+    cout << endl;
+    root->tmpTeamA.sortTeam();
+    next->tmpTeamA.sortTeam();
+    cout << "the root team is " << endl;
+    root->tmpTeamA.print();
+    cout << "the tmp team is " << endl;
+    next->tmpTeamA.print();
+    cout << next->advantage << endl;
+    cout << "the max team is " << endl;
+    maxState->tmpTeamA.print();
+    cout << maxState->advantage << endl;
+
+    for (int i = 0; i < root->tmpTeamA.count();i++){
+        if (root->tmpTeamA.members[i] != next->tmpTeamA.members[i]) return next->tmpTeamA.members[i]->id;
+    }
+    return next->tmpTeamA.members[next->tmpTeamA.count()-1]->id;
 }
 // possible optimization: pass only the score and current chosen contestant 
 // rather than the whole team
@@ -225,6 +295,7 @@ int main(){
         cout << minmax(teamA, teamB, people) << endl;
     }
     else if (algorithm == "ab"){
+        cout << ab(teamA, teamB, people) << endl;
     }
     return 0;
 }
