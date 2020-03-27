@@ -134,12 +134,9 @@ state* buildGraph(team teamA, team teamB, vector<contestant*> people){
     return root;
 }
 
-state* maxState = NULL;
 double maxValue (state*s){
     if (terminateTest(s)) {
-        if (!maxState) maxState = s;
         s->advantage = s->tmpTeamA.sumUp() - s->tmpTeamB.sumUp();
-        if (maxState->tmpTeamA.sumUp() - maxState->tmpTeamB.sumUp() < s->advantage) maxState = s;
         return s->advantage;
     }
     double retval = -(numeric_limits<double>::max)();
@@ -153,9 +150,7 @@ double maxValue (state*s){
 
 double minValue (state*s){
     if (terminateTest(s)) {
-        if (!maxState) maxState = s;
         s->advantage = s->tmpTeamA.sumUp() - s->tmpTeamB.sumUp();
-        if (maxState->tmpTeamA.sumUp() - maxState->tmpTeamB.sumUp() < s->advantage) maxState = s;
         return s->advantage;
     }
     double retval = (numeric_limits<double>::max)();
@@ -166,7 +161,6 @@ double minValue (state*s){
     s->advantage = retval;
     return retval;
 }
-
 int minmax(team teamA, team teamB, vector<contestant*> people){
     state* root = buildGraph(teamA, teamB, people);
     state* tmp = NULL;
@@ -180,31 +174,41 @@ int minmax(team teamA, team teamB, vector<contestant*> people){
     }
     root->tmpTeamA.sortTeam();
     tmp->tmpTeamA.sortTeam();
-    cout << "the root team is " << endl;
-    root->tmpTeamA.print();
-    cout << "the tmp team is " << endl;
-    tmp->tmpTeamA.print();
-    cout << tmp->advantage<< endl;
-    cout << "max state" << endl;
-    maxState->tmpTeamA.print();
-    cout << maxState->advantage << endl;
-    maxState->tmpTeamA.sortTeam();
-    // cout << maxState->tmpTeamA.sumUp();
     for (int i = 0; i < root->tmpTeamA.count();i++){
         if (root->tmpTeamA.members[i] != tmp->tmpTeamA.members[i]) return tmp->tmpTeamA.members[i]->id;
     }
     return tmp->tmpTeamA.members[tmp->tmpTeamA.count()-1]->id;
 }
+state* expandChild(state* parent, int val){
+    state* s = NULL;
+    vector <contestant*> newUnvisited;
+    for (int i = 0; i < parent->unvisited.size(); i++){
+        if (i != val) newUnvisited.push_back(parent->unvisited[i]);
+    }
+    if (parent->isMax){
+        team newTeamA(true);
+        newTeamA.members = parent->tmpTeamA.members;
+        newTeamA.members.push_back(parent->unvisited[val]);
+        s = new state(false, false, newUnvisited, newTeamA, parent->tmpTeamB);
+    }
+    else{
+        team newTeamB(false);
+        newTeamB.members = parent->tmpTeamB.members;
+        newTeamB.members.push_back(parent->unvisited[val]);
+        s = new state(false, true, newUnvisited, parent->tmpTeamA, newTeamB);
+    }
+    parent->children.push_back(s);
+    return s;
+}
 double maxValue(state*s, double alpha, double beta){
     if (terminateTest(s)) {
-        if (!maxState) maxState = s;
         s->advantage = s->tmpTeamA.sumUp() - s->tmpTeamB.sumUp();
-        if (maxState->tmpTeamA.sumUp() - maxState->tmpTeamB.sumUp() < s->advantage) maxState = s;
-        //return s->advantage;
-        return s->tmpTeamA.sumUp() - s->tmpTeamB.sumUp();
+        return s->advantage;
     }
     double retval = -(numeric_limits<double>::max)();
-    for (state* child : s->children){
+    for (int i = 0; i < s->unvisited.size(); i++){
+        // expand the next child
+        state* child = expandChild(s,i);
         retval = max(retval, minValue(child,alpha,beta));
         if (retval >= beta) {
             s->advantage = retval;
@@ -217,14 +221,14 @@ double maxValue(state*s, double alpha, double beta){
 }
 double minValue(state*s, double alpha, double beta){
     if (terminateTest(s)) {
-        if (!maxState) maxState = s;
         s->advantage = s->tmpTeamA.sumUp() - s->tmpTeamB.sumUp();
-        if (maxState->tmpTeamA.sumUp() - maxState->tmpTeamB.sumUp() < s->advantage) maxState = s;
         return s->advantage;
         //return s->tmpTeamA.sumUp() - s->tmpTeamB.sumUp();
     }
     double retval = (numeric_limits<double>::max)();
-    for (state* child : s->children){
+    for (int i = 0; i < s->unvisited.size(); i++){
+        // explore the next child
+        state* child = expandChild(s,i);
         retval = min(retval, maxValue(child, alpha, beta));
         if (retval <= alpha) {
             s->advantage = retval;
@@ -236,7 +240,7 @@ double minValue(state*s, double alpha, double beta){
     return retval;
 }
 int ab(team teamA, team teamB, vector<contestant*> people){
-    state* root = buildGraph(teamA, teamB, people);
+    state* root = new state(true, true, people, teamA, teamB);
     double ad = maxValue(root, -(numeric_limits<double>::max)(), (numeric_limits<double>::max)());
     state* next;
     for (state* s : root->children) {
@@ -245,17 +249,8 @@ int ab(team teamA, team teamB, vector<contestant*> people){
             break;
         }
     }
-    cout << endl;
     root->tmpTeamA.sortTeam();
     next->tmpTeamA.sortTeam();
-    cout << "the root team is " << endl;
-    root->tmpTeamA.print();
-    cout << "the tmp team is " << endl;
-    next->tmpTeamA.print();
-    cout << next->advantage << endl;
-    cout << "the max team is " << endl;
-    maxState->tmpTeamA.print();
-    cout << maxState->advantage << endl;
 
     for (int i = 0; i < root->tmpTeamA.count();i++){
         if (root->tmpTeamA.members[i] != next->tmpTeamA.members[i]) return next->tmpTeamA.members[i]->id;
