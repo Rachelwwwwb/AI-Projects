@@ -99,7 +99,7 @@ void value_iteration(vector<vector<square> >& grid, bool& stop){
 
     
 }
-double checkPercent(const vector<vector<square> > grid){
+double checkPercent(const vector<vector<square> >& grid){
     ifstream myfile;
     myfile.open("output_sample.txt");
     int total = grid.size()*grid.size();
@@ -113,20 +113,26 @@ double checkPercent(const vector<vector<square> > grid){
     }
     return 100*double(correct)/ double(total);
 }
+void writeOutput(const vector<vector<square> >& grid){
+
+    ofstream myfile;
+    myfile.open("output.txt");
+    for (int i = 0; i < grid.size(); i++){
+        for (int j = 0; j < grid.size(); j++){
+            myfile <<  grid[j][i].dir;
+        }
+        myfile << "\n";
+    }
+    myfile.close();
+}
 // after getting the utility function
 // write the direction for each square
 void getDir(vector<vector<square> >& grid){
     bool stop = false;
     while(!stop) value_iteration(grid,stop);
-    for (int i = 0; i < grid.size(); i++){
-        for (int j = 0; j < grid.size(); j++){
-            cout << grid[j][i].dir << " ";
-        }
-        cout << endl;
-    }
     cout << checkPercent(grid) << "%" << endl;
+    writeOutput(grid);
 }
-
 
 int main(){
     int d;  // for dimension
