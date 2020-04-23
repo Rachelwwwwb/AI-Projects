@@ -32,14 +32,14 @@ void value_iteration(vector<vector<square> >& grid, bool& stop){
                     double leftValue = 0.0;
                     double rightValue = 0.0;
 
-                    // find the uility of going up
-                    if (num == 0) up = 0.8;
-                    // find the uility of going down
-                    else if (num == 1) down = 0.8;
-                    // find the uility of going left 
-                    else if (num == 2) left = 0.8;
+                    // find the uility of going left
+                    if (num == 0) left = 0.7;
                     // find the uility of going right
-                    else if (num == 3) right = 0.8;
+                    else if (num == 1) right = 0.7;
+                    // find the uility of going down 
+                    else if (num == 2) down = 0.7;
+                    // find the uility of going up
+                    else if (num == 3) up = 0.7;
 
                     if (j-1 < 0){
                         stay += left;
@@ -73,7 +73,7 @@ void value_iteration(vector<vector<square> >& grid, bool& stop){
 
                     // the reward for a given direction
                     double tmp = up * upValue + down * downValue + left * leftValue + right * rightValue + stay * grid[j][i].utility;
-                    if (max < tmp) {
+                    if (max <= tmp) {
                         max = tmp;
                         max_dir = num;
                     }
@@ -83,10 +83,10 @@ void value_iteration(vector<vector<square> >& grid, bool& stop){
                 double oldU = grid[j][i].utility;
                 if (grid[j][i].dir != 'o' && grid[j][i].dir != '.') {
                     grid[j][i].utility = -1 + 0.9 * max;
-                    if (max_dir == 0) grid[j][i].dir = '^';
-                    else if (max_dir == 1) grid[j][i].dir = 'v';
-                    else if (max_dir == 2) grid[j][i].dir = '<';
-                    else if (max_dir == 3) grid[j][i].dir = '>';
+                    if (max_dir == 0) grid[j][i].dir = '<';
+                    else if (max_dir == 1) grid[j][i].dir = '>';
+                    else if (max_dir == 2) grid[j][i].dir = 'v';
+                    else if (max_dir == 3) grid[j][i].dir = '^';
 
                 }
                 else if (grid[j][i].dir == 'o') grid[j][i].utility = -101 + 0.9 * max;
@@ -96,22 +96,7 @@ void value_iteration(vector<vector<square> >& grid, bool& stop){
             }
         }
     }
-
     
-}
-double checkPercent(const vector<vector<square> >& grid){
-    ifstream myfile;
-    myfile.open("output_sample.txt");
-    int total = grid.size()*grid.size();
-    int correct = 0;
-    for (int i = 0; i < grid.size(); i++){
-        string line; 
-        myfile >> line;
-        for (int j = 0; j < grid.size(); j++){
-            if (grid[j][i].dir == line[j]) correct++;
-        }
-    }
-    return 100*double(correct)/ double(total);
 }
 void writeOutput(const vector<vector<square> >& grid){
 
@@ -130,7 +115,6 @@ void writeOutput(const vector<vector<square> >& grid){
 void getDir(vector<vector<square> >& grid){
     bool stop = false;
     while(!stop) value_iteration(grid,stop);
-    cout << checkPercent(grid) << "%" << endl;
     writeOutput(grid);
 }
 
@@ -153,7 +137,7 @@ int main(){
         myfile >> y >> comma >> x;
         if (i == num) {
             grid[y][x].dir = '.';
-            grid[y][x].utility = 100;
+            grid[y][x].utility = 99;
         }
         else {
             grid[y][x].dir = 'o';
